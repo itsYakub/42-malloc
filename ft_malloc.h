@@ -5,6 +5,7 @@
 #if !defined (_malloc_h_)
 # define _malloc_h_ 1
 #
+# include <errno.h>
 # include <pthread.h>       /* libpthread...    */
 # include <unistd.h>        /* sysconf          */
 # include <sys/mman.h>      /* mmap, munmap     */

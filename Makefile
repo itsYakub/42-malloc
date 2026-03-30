@@ -61,7 +61,8 @@ clean :
 .PHONY : test
 
 test : all
-	$(CC) $(CFLAGS) test.c -L. -l:$(TARGET)
+	$(CC) $(CFLAGS) test.c -o test_libft.out -L. -l:$(TARGET)
+	$(CC) $(CFLAGS) test.c -o test_libc.out
 
 # ========
 
