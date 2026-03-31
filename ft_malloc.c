@@ -3,7 +3,9 @@
 
 static void *_blk_alloc(const size_t);
 
-static void *_blk_getchk(struct s_mallocBlock *);
+static void *_blk_getchk(struct s_mallocBlock *, const size_t);
+
+static void *_chk_alloc(struct s_mallocBlock *, const size_t, const size_t);
 
 /* malloc:
  *  The malloc() function allocates size bytes and returns a pointer to the allocated memory.  The memory is not initialized.
@@ -16,40 +18,26 @@ void *malloc(size_t size) {
 
     /* perform tiny allocation... */
     if (size > 0 && size <= FT_MALLOC_TINY_SIZE) {
-        /* check if block is null... */
-        struct s_mallocBlock *blk = 0;
         if (!g_info.blk.b_tny) {
             g_info.blk.b_tny = _blk_alloc(FT_MALLOC_TINY_SIZE);
-            if (!g_info.blk.b_tny) {
-                return (0);
-            }
         }
-        blk = g_info.blk.b_tny;
-
-        /* check the size of the memory block... */
-        struct s_mallocChunk *chk = 0;
-        while (!(chk = _blk_getchk(blk))) {
-            if (!blk->b_nxt) {
-                blk->b_nxt = _blk_alloc(FT_MALLOC_TINY_SIZE);
-                if (!blk) {
-                    return (0);
-                }
-            
-                blk->b_nxt->b_prv = blk;
-            }
-            
-            blk = blk->b_nxt;
+    
+        ptr = _chk_alloc(g_info.blk.b_tny, FT_MALLOC_TINY_SIZE, size);
+        if (!ptr) {
+            return (0);
         }
-
-        /* and lastly, assign the 'ptr'... */
-        ptr = chk->c_dat;
-        chk->c_siz = size;
-        chk->c_use = 1;
     }
 
     /* perform small allocation... */
     else if (size > FT_MALLOC_TINY_SIZE && size <= FT_MALLOC_SMALL_SIZE) {
-    
+        if (!g_info.blk.b_sml) {
+            g_info.blk.b_sml = _blk_alloc(FT_MALLOC_SMALL_SIZE);
+        }
+        
+        ptr = _chk_alloc(g_info.blk.b_sml, FT_MALLOC_SMALL_SIZE, size);
+        if (!ptr) {
+            return (0);
+        }
     }
 
     /* perform large allocation... */
@@ -74,43 +62,76 @@ static void *_blk_alloc(const size_t cap) {
 
     /* configure block metadata... */
     struct s_mallocBlock *blk = (struct s_mallocBlock *) addr;
-    blk->b_siz = siz;
-    blk->b_cap = siz - sizeof(struct s_mallocBlock);
+    blk->b_siz = 0;
+    blk->b_cap = 100 * cap; 
     blk->b_dat = (char * ) blk + sizeof(struct s_mallocBlock);
-
-    /* initialize each chunk... */
-    struct s_mallocChunk *chk = blk->b_dat;
-    for (size_t i = 0; i < 100; i++) {
-        /* configure chunk's metadata... */
-        chk->c_blk = blk;
-        chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
-        chk->c_nxt = (char *) chk->c_dat + cap;
-
-        /* move chunk's pointer to the next chunk... */
-        chk = chk->c_nxt;
-    }
 
     return (blk);
 }
 
 
-static void *_blk_getchk(struct s_mallocBlock *blk) {
+static void *_blk_getchk(struct s_mallocBlock *blk, const size_t siz) {
     /* null-check... */
     if (!blk) { return (0); }
 
     /* iterate over the block to find free chunk... */
     struct s_mallocChunk *chk = blk->b_dat;
-    for (size_t i = 0; i < 100; i++) {
-        /* free chunk found, return it... */
-        if (!chk->c_use) {
-            return (chk);
+    for (size_t i = (void *) chk - blk->b_dat; i < blk->b_cap; i = (void *) chk - blk->b_dat) {
+        /* case: last chunk... */
+        if (!chk->c_nxt) {
+            /* check if we even have enough room for a new data... */
+            if ((i + sizeof(struct s_mallocChunk)) + siz < blk->b_cap) {
+                return (chk);
+            }
+
+            /* otherwise break from the loop...*/
+            break;
         }
 
+        /* case: chunk inside... */
+        else if (chk->c_siz <= siz) {
+            if (!chk->c_use) {
+                return (chk);
+            }
+        }
+
+        /* move to the next chunk... */
         chk = chk->c_nxt;
     }
 
     /* free chunk not found, return null... */
     return (0);
+}
+
+
+static void *_chk_alloc(struct s_mallocBlock *blk, const size_t cap, const size_t size) {
+    /* check if current block was exhausted... */
+    struct s_mallocChunk *chk = 0;
+    while (!(chk = _blk_getchk(blk, size))) {
+        if (!blk->b_nxt) {
+            blk->b_nxt = _blk_alloc(cap);
+            if (!blk) {
+                return (0);
+            }
+        
+            blk->b_nxt->b_prv = blk;
+        }
+        
+        blk = blk->b_nxt;
+    }
+
+    /* set the current chunk metadata... */
+    chk->c_blk = blk;
+    chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
+    chk->c_nxt = (char *) chk + sizeof(struct s_mallocChunk) + size;
+    chk->c_siz = size;
+    chk->c_use = 1;
+
+    /* update block's metadata... */
+    blk->b_siz += size;
+
+    /* return new poitner... */
+    return (chk->c_dat);
 }
 
 /* SECTION: s_mallocInfo...

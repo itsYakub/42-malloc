@@ -2,15 +2,14 @@
 #include "ft_malloc.h"
 
 int main(void) {
-    int *arr = malloc(sizeof(int));
-    if (!arr) {
-        return (1);
+    for (size_t i = 1; i <= 16; i++) {
+        int *ptr = malloc(sizeof(int) * i);
+        if (!ptr) {
+            return (1);
+        }
+
+        *ptr = i;
+        printf("%p = %d\n", ptr, *ptr);
     }
-
-    *arr = 42;
-    printf("%p = %d\n", arr, *arr);
-    
-    free(arr);
-
     return (0);
 }
