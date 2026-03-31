@@ -1,7 +1,9 @@
 #include "./ft_malloc.h"
 #include "./ft_malloc_int.h"
 
-static struct s_mallocBlock *_malloc_blkalloc(const size_t);
+static void *_blk_alloc(const size_t);
+
+static void *_blk_getchk(struct s_mallocBlock *);
 
 /* malloc:
  *  The malloc() function allocates size bytes and returns a pointer to the allocated memory.  The memory is not initialized.
@@ -14,24 +16,21 @@ void *malloc(size_t size) {
 
     /* perform tiny allocation... */
     if (size > 0 && size <= FT_MALLOC_TINY_SIZE) {
-        struct s_mallocBlock *blk = 0;
-
         /* check if block is null... */
+        struct s_mallocBlock *blk = 0;
         if (!g_info.blk.b_tny) {
-            blk = g_info.blk.b_tny = _malloc_blkalloc(FT_MALLOC_TINY_SIZE);
-            if (!blk) {
+            g_info.blk.b_tny = _blk_alloc(FT_MALLOC_TINY_SIZE);
+            if (!g_info.blk.b_tny) {
                 return (0);
             }
         }
-        else {
-            blk = g_info.blk.b_tny;
-        }
+        blk = g_info.blk.b_tny;
 
         /* check the size of the memory block... */
-        size_t c_siz = size + sizeof(struct s_mallocHeader);
-        while (blk->b_siz + c_siz >= blk->b_cap) {
+        struct s_mallocChunk *chk = 0;
+        while (!(chk = _blk_getchk(blk))) {
             if (!blk->b_nxt) {
-                blk->b_nxt = _malloc_blkalloc(FT_MALLOC_TINY_SIZE);
+                blk->b_nxt = _blk_alloc(FT_MALLOC_TINY_SIZE);
                 if (!blk) {
                     return (0);
                 }
@@ -42,112 +41,76 @@ void *malloc(size_t size) {
             blk = blk->b_nxt;
         }
 
-        /* now, get the memory chunk... */
-        struct s_mallocHeader *header = (struct s_mallocHeader *) ((char *) blk->b_dat + blk->b_siz);
-        header->h_blk = blk;
-        header->h_dat = header + sizeof(struct s_mallocHeader);
-        header->h_siz = c_siz;
-
-        /* increment the size of the block... */
-        blk->b_siz += c_siz;
-
         /* and lastly, assign the 'ptr'... */
-        ptr = header->h_dat;
+        ptr = chk->c_dat;
+        chk->c_siz = size;
+        chk->c_use = 1;
     }
 
     /* perform small allocation... */
     else if (size > FT_MALLOC_TINY_SIZE && size <= FT_MALLOC_SMALL_SIZE) {
-        struct s_mallocBlock *blk = 0;
-
-        /* check if block is null... */
-        if (!g_info.blk.b_sml) {
-            blk = g_info.blk.b_sml = _malloc_blkalloc(FT_MALLOC_SMALL_SIZE);
-            if (!blk) {
-                return (0);
-            }
-        }
-        else {
-            blk = g_info.blk.b_sml;
-        }
-
-        /* check the size of the memory block... */
-        size_t c_siz = size + sizeof(struct s_mallocHeader);
-        while (blk->b_siz + c_siz >= blk->b_cap) {
-            if (!blk->b_nxt) {
-                blk->b_nxt = _malloc_blkalloc(FT_MALLOC_SMALL_SIZE);
-                if (!blk) {
-                    return (0);
-                }
-            
-                blk->b_nxt->b_prv = blk;
-            }
-            
-            blk = blk->b_nxt;
-        }
-
-        /* now, get the memory chunk... */
-        struct s_mallocHeader *header = (struct s_mallocHeader *) ((char *) blk->b_dat + blk->b_siz);
-        header->h_blk = blk;
-        header->h_dat = header + sizeof(struct s_mallocHeader);
-        header->h_siz = c_siz;
-
-        /* increment the size of the block... */
-        blk->b_siz += c_siz;
-
-        /* and lastly, assign the 'ptr'... */
-        ptr = header->h_dat;
+    
     }
 
     /* perform large allocation... */
     else if (size > FT_MALLOC_SMALL_SIZE) {
-        /* allocate new "lerge" chunk... */
-        void *addr = mmap(0, sizeof(struct s_mallocHeader) + size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (!addr) {
-            return (0);
-        }
 
-        /* initialize chunk's header... */
-        struct s_mallocHeader *header = addr;
-        header->h_blk = 0;
-        header->h_dat = addr + sizeof(struct s_mallocHeader);
-        header->h_siz = size;
-        
-        /* assign the value of 'ptr'... */
-        ptr = header->h_dat;
     }
 
     return (ptr);
 }
 
 
-static struct s_mallocBlock *_malloc_blkalloc(const size_t cap) {
-    /* alloc and clear the new block...
-     * */
-    struct s_mallocBlock *blk = mmap(0, sizeof(struct s_mallocBlock), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (!blk) {
+static void *_blk_alloc(const size_t cap) {
+    /* alloc the new block... */
+    size_t siz = sizeof(struct s_mallocBlock) + 100 * (sizeof(struct s_mallocChunk) + cap);
+    void *addr = mmap(0, siz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    if (!addr) {
         return (0);
     }
 
-    blk = ft_memset(blk, 0, sizeof(struct s_mallocBlock));
+    /* clear allocated block...  */
+    addr = ft_memset(addr, 0, siz);
 
-    /* setup block data...
-     * */
-    blk->b_cap = (sizeof(struct s_mallocHeader) + cap) * 100;
-    blk->b_dat = mmap(0, blk->b_cap, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (!blk->b_dat) {
-        /* preserve errno... */
-        int err = errno;
+    /* configure block metadata... */
+    struct s_mallocBlock *blk = (struct s_mallocBlock *) addr;
+    blk->b_siz = siz;
+    blk->b_cap = siz - sizeof(struct s_mallocBlock);
+    blk->b_dat = (char * ) blk + sizeof(struct s_mallocBlock);
 
-        /* release the block... */
-        munmap(blk, sizeof(struct s_mallocBlock));
+    /* initialize each chunk... */
+    struct s_mallocChunk *chk = blk->b_dat;
+    for (size_t i = 0; i < 100; i++) {
+        /* configure chunk's metadata... */
+        chk->c_blk = blk;
+        chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
+        chk->c_nxt = (char *) chk->c_dat + cap;
 
-        /* revert errno */
-        errno = err;
-
-        return (0);
+        /* move chunk's pointer to the next chunk... */
+        chk = chk->c_nxt;
     }
 
     return (blk);
+}
+
+
+static void *_blk_getchk(struct s_mallocBlock *blk) {
+    /* null-check... */
+    if (!blk) { return (0); }
+
+    /* iterate over the block to find free chunk... */
+    struct s_mallocChunk *chk = blk->b_dat;
+    for (size_t i = 0; i < 100; i++) {
+        /* free chunk found, return it... */
+        if (!chk->c_use) {
+            return (chk);
+        }
+
+        chk = chk->c_nxt;
+    }
+
+    /* free chunk not found, return null... */
+    return (0);
 }
 
 /* SECTION: s_mallocInfo...

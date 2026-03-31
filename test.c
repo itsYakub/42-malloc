@@ -10,14 +10,6 @@ int main(void) {
     *arr = 42;
     printf("%p = %d\n", arr, *arr);
     
-    arr = malloc(sizeof(int));
-    if (!arr) {
-        return (1);
-    }
-    
-    *arr = 8;
-    printf("%p = %d\n", arr, *arr);
-    
     free(arr);
 
     return (0);

@@ -5,9 +5,14 @@
 #if !defined (_malloc_h_)
 # define _malloc_h_ 1
 #
+# include <stdint.h>
+# include <stddef.h>
+# include <stdbool.h>
+#
 # include <errno.h>
 # include <pthread.h>       /* libpthread...    */
 # include <unistd.h>        /* sysconf          */
+#
 # include <sys/mman.h>      /* mmap, munmap     */
 # include <sys/time.h>
 # include <sys/resource.h>  /* getrlimit        */
