@@ -10,6 +10,8 @@ int main(void) {
 
         *ptr = i;
         printf("%p = %d\n", ptr, *ptr);
+
+        free(ptr);
     }
     return (0);
 }
