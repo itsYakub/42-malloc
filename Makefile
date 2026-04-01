@@ -18,9 +18,10 @@ LDFLAGS	= -L$(LIBFT)
 # ========
 
 OBJS	= $(SRCS:.c=.o)
-SRCS	= ./ft_free.c		\
-		  ./ft_malloc.c		\
-		  ./ft_realloc.c	\
+SRCS	= ./ft_free.c			\
+		  ./ft_malloc.c			\
+		  ./ft_realloc.c		\
+		  ./ft_show_alloc_mem.c	\
 
 # ========
 
@@ -31,7 +32,6 @@ LIBFT	= ./libft/
 TARGET	= ./libft_malloc_$(HOSTTYPE).so
 
 # ========
-
 
 .PHONY : all
 
@@ -61,8 +61,8 @@ clean :
 .PHONY : test
 
 test : all
-	$(CC) $(CFLAGS) test.c -o test_libft.out -L. -l:$(TARGET)
-	$(CC) $(CFLAGS) test.c -o test_libc.out
+	-$(CC) $(CFLAGS) -DTEST_LIBFT test.c -o test_libft.out -L. -l:$(TARGET)
+	-$(CC) $(CFLAGS) -DTEST_LIBC  test.c -o test_libc.out
 
 # ========
 
@@ -74,6 +74,5 @@ $(TARGET) : $(OBJS)
 
 $(OBJS) : %.o : %.c
 	$(CC) $(CFLAGS) -fpic -o $@ -c $<
-
 
 # ========
