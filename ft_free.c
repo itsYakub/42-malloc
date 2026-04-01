@@ -13,7 +13,7 @@ static int _chk_dealloc(struct s_mallocChunk *);
  *  Otherwise, or if free(ptr) has already been called before, undefined behavior occurs.
  *  If ptr is NULL, no operation is per‐formed.
  * */
-void free(void *ptr) {
+void ft_free(void *ptr) {
     if (!ptr) { return; }
 
     /* move the pointer to the metadata... */
