@@ -13,7 +13,7 @@ static void show_alloc_mem(void) { }
 
 int main(void) {
     srand(time(0));
-    for (size_t i = 1; i <= 32; i++) {
+    for (size_t i = 1; i <= 64; i++) {
         int *ptr = malloc(sizeof(int) * i);
         if (!ptr) {
             return (1);

@@ -57,6 +57,8 @@ struct s_mallocInfo {
         struct s_mallocBlock *b_tny;
 
         struct s_mallocBlock *b_sml;
+
+        struct s_mallocChunk *b_lrg;
         
     } blk;
 

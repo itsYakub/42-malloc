@@ -5,7 +5,9 @@ static void *_blk_alloc(const size_t);
 
 static void *_blk_getchk(struct s_mallocBlock *, const size_t);
 
-static void *_chk_alloc(struct s_mallocBlock *, const size_t, const size_t);
+static void *_chk_alloc(const size_t);
+
+static void *_chk_reserve(struct s_mallocBlock *, const size_t, const size_t);
 
 /* malloc:
  *  The malloc() function allocates size bytes and returns a pointer to the allocated memory.  The memory is not initialized.
@@ -22,7 +24,7 @@ void *ft_malloc(size_t size) {
             g_info.blk.b_tny = _blk_alloc(FT_MALLOC_TINY_SIZE);
         }
     
-        ptr = _chk_alloc(g_info.blk.b_tny, FT_MALLOC_TINY_SIZE, size);
+        ptr = _chk_reserve(g_info.blk.b_tny, FT_MALLOC_TINY_SIZE, size);
         if (!ptr) {
             return (0);
         }
@@ -34,7 +36,7 @@ void *ft_malloc(size_t size) {
             g_info.blk.b_sml = _blk_alloc(FT_MALLOC_SMALL_SIZE);
         }
         
-        ptr = _chk_alloc(g_info.blk.b_sml, FT_MALLOC_SMALL_SIZE, size);
+        ptr = _chk_reserve(g_info.blk.b_sml, FT_MALLOC_SMALL_SIZE, size);
         if (!ptr) {
             return (0);
         }
@@ -42,7 +44,32 @@ void *ft_malloc(size_t size) {
 
     /* perform large allocation... */
     else if (size > FT_MALLOC_SMALL_SIZE) {
+        struct s_mallocChunk *chk = 0;
+        /* check if any large block is allocated... */
+        if (!g_info.blk.b_lrg) {
+            chk = g_info.blk.b_lrg = _chk_alloc(size);
+        }
+        /* if there're existing blocks... */
+        else {
+            chk = g_info.blk.b_lrg;
+            while (chk->c_nxt) {
+                if (!chk->c_use) {
+                    /* reuse existing, size - matching chunk... */
+                    if (chk->c_siz == size) {
+                        break;
+                    }
+                }
+                chk = chk->c_nxt;
+            }
 
+            /* if we get to the end of the list... */
+            if (!chk->c_nxt) {
+                chk->c_nxt = _chk_alloc(size);
+                chk = chk->c_nxt;
+            }
+        }
+
+        ptr = chk->c_dat;
     }
 
     return (ptr);
@@ -104,7 +131,24 @@ static void *_blk_getchk(struct s_mallocBlock *blk, const size_t siz) {
 }
 
 
-static void *_chk_alloc(struct s_mallocBlock *blk, const size_t cap, const size_t size) {
+static void *_chk_alloc(const size_t size) {
+    if (!size) { return (0); }
+    
+    void *addr = mmap(0, sizeof(struct s_mallocChunk) + size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    if (!addr) {
+        return (0);
+    }
+
+    struct s_mallocChunk *chk = addr;
+    chk->c_blk = chk->c_nxt = 0;
+    chk->c_dat = chk + 1;
+    chk->c_siz = size;
+    chk->c_use = 1;
+    return (chk);
+}
+
+
+static void *_chk_reserve(struct s_mallocBlock *blk, const size_t cap, const size_t size) {
     /* check if current block was exhausted... */
     struct s_mallocChunk *chk = 0;
     while (!(chk = _blk_getchk(blk, size))) {

@@ -55,7 +55,32 @@ void ft_free(void *ptr) {
 
     /* perform large deallocation... */
     else if (size > FT_MALLOC_SMALL_SIZE) {
+        /* dealloc for the head... */
+        if (chk == g_info.blk.b_lrg) {
+            /* save the next element from head... */
+            chk = chk->c_nxt;
 
+            /* unmap current head... */
+            munmap(g_info.blk.b_lrg, sizeof(struct s_mallocChunk) + chk->c_siz);
+
+            /* assign new head (if current 'chk' is null then we effectively clear-out the chunk list)... */
+            g_info.blk.b_lrg = chk;
+        }
+
+        /* dealloc non-head element... */
+        else {
+            /* dealloc the tail... */
+            if (!chk->c_nxt) {
+                munmap(chk, sizeof(struct s_mallocChunk) + chk->c_siz);
+            }
+
+            /* dealloc inner element... */
+            else {
+                /* TODO:
+                 *  figure out how to dealloc inner element
+                 * */
+            }
+        }
     }
 }
 

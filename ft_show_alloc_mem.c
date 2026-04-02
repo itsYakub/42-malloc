@@ -16,7 +16,7 @@ void show_alloc_mem(void) {
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
                 if (chk->c_use) {
-                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_nxt - chk->c_dat);
+                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
                 }
 
                 chk = chk->c_nxt;
@@ -36,11 +36,25 @@ void show_alloc_mem(void) {
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
                 if (chk->c_use) {
-                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_nxt - chk->c_dat);
+                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
                 }
 
                 chk = chk->c_nxt;
             }
+        }
+    }
+    
+    /* SMALL blocks... */
+    if (g_info.blk.b_lrg) {
+        ft_putendl_fd("LARGE blocks:", 1);
+        /* iterate over every block... */
+        struct s_mallocChunk *chk = g_info.blk.b_lrg;
+        while (chk) {
+            if (chk->c_use) {
+                printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_dat + chk->c_siz, chk->c_siz);
+            }
+
+            chk = chk->c_nxt;
         }
     }
 }
