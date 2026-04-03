@@ -18,9 +18,7 @@ void show_alloc_mem(void) {
             /* iterate over every chunk... */
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
-                if (chk->c_use) {
-                    total += chk->c_siz;
-                }
+                total += chk->c_siz;
 
                 chk = chk->c_nxt;
             }
@@ -37,9 +35,7 @@ void show_alloc_mem(void) {
             /* iterate over every chunk... */
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
-                if (chk->c_use) {
-                    total += chk->c_siz;
-                }
+                total += chk->c_siz;
 
                 chk = chk->c_nxt;
             }
@@ -53,9 +49,7 @@ void show_alloc_mem(void) {
         /* iterate over every block... */
         struct s_mallocChunk *chk = g_info.blk.b_lrg;
         while (chk) {
-            if (chk->c_use) {
-                total += chk->c_siz;
-            }
+            total += chk->c_siz;
 
             chk = chk->c_nxt;
         }

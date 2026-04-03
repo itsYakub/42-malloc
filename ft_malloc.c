@@ -54,10 +54,6 @@ void *malloc(size_t size) {
         else {
             chk = g_info.blk.b_lrg;
             while (chk->c_nxt) {
-                if (!chk->c_use && chk->c_siz == size) {
-                    break;
-                }
-
                 chk = chk->c_nxt;
             }
             if (!chk->c_nxt) {
@@ -112,13 +108,6 @@ static void *_blk_getchk(struct s_mallocBlock *blk, const size_t siz) {
             break;
         }
 
-        /* case: chunk inside... */
-        else if (chk->c_siz <= siz) {
-            if (!chk->c_use) {
-                return (chk);
-            }
-        }
-
         /* move to the next chunk... */
         chk = chk->c_nxt;
     }
@@ -140,7 +129,6 @@ static void *_chk_alloc(const size_t size) {
     chk->c_blk = chk->c_nxt = 0;
     chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
     chk->c_siz = size;
-    chk->c_use = 1;
     return (chk);
 }
 
@@ -162,7 +150,6 @@ static void *_chk_reserve(struct s_mallocBlock *blk, const size_t cap, const siz
     }
 
     /* set the current chunk metadata... */
-    chk->c_use = 1;
     chk->c_siz = size;
     chk->c_blk = blk;
     chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);

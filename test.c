@@ -14,6 +14,8 @@ static void show_alloc_mem(void) { }
 #endif
 
 int main(void) {
+    ft_putendl_fd("=== TEST 1 ===", 1);
+
     void *ptrs[] = {
         /* tiny allocs... */
         malloc(1),
@@ -34,12 +36,14 @@ int main(void) {
     };
 
     show_alloc_mem();
-
+    
     for (int i = sizeof(ptrs) / sizeof(void *) - 1; i >= 0; i--) {
         free(ptrs[i]);
     }
     
     show_alloc_mem();
+    
+    ft_putendl_fd("=== TEST 2 ===", 1);
 
     char *ptr = malloc(8);
     ft_strlcpy(ptr, "Hello", 8);
@@ -54,6 +58,20 @@ int main(void) {
     show_alloc_mem();
    
     free(ptr);
+    
+    show_alloc_mem();
+    
+    ft_putendl_fd("=== TEST 3 ===", 1);
+
+    void *a = malloc(4);
+    void *b = malloc(8);
+    free(a);
+    void *c = malloc(4);
+    
+    show_alloc_mem();
+
+    free(b);
+    free(c);
     
     show_alloc_mem();
 

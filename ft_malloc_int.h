@@ -30,8 +30,6 @@ struct s_mallocChunk {
 
     size_t c_siz;   /* c_siz - chunk's size */
 
-    bool c_use;     /* c_use - flag if chunk is used */
-
 };
 
 
