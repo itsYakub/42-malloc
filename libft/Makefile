@@ -35,6 +35,7 @@ SRC_M = \
 	ft_putchar_fd.c \
 	ft_putstr_fd.c \
 	ft_putnbr_fd.c \
+	ft_putnbr_base_fd.c \
 	ft_putendl_fd.c
 
 SRC_B = \
