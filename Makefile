@@ -61,8 +61,8 @@ clean :
 .PHONY : test
 
 test : all
-	-$(CC) $(CFLAGS) -DTEST_LIBFT test.c -o test_libft.out -L. -l:$(TARGET)
-	-$(CC) $(CFLAGS) -DTEST_LIBC  test.c -o test_libc.out
+	-$(CC) $(CFLAGS) -DTEST_LIBFT test.c -o test_libft.out -L. -L./libft -lft -l:$(TARGET)
+	-$(CC) $(CFLAGS) -DTEST_LIBC  test.c -o test_libc.out  -L. -L./libft -lft
 
 # ========
 

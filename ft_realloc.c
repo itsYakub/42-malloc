@@ -1,4 +1,5 @@
 #include "./ft_malloc.h"
+#include "./ft_malloc_int.h"
 
 /* realloc:
  *  The realloc() function changes the size of the memory block pointed to by ptr to size bytes.
@@ -10,18 +11,29 @@
  *  If the area pointed to was moved, a free(ptr) is done.
  * */
 void *realloc(void *ptr, size_t size) {
-    /* Allocate the new memory block...
-     * */
+    /* Allocate the new memory block... */
     void *newptr = malloc(size);
     if (!newptr) {
         return (0);
     }
 
-    /* Check if 'ptr' is null - if so, return the new block...
-     * */
+    /* Check if 'ptr' is null - if so, return the new block... */
     if (!ptr) { return (newptr); }
 
-    /* ... */
+    ptr = (char *) ptr - sizeof(struct s_mallocChunk);
+    
+    /* Get the allocs chunk to get the size of the allocated block... */
+    struct s_mallocChunk *chk = (struct s_mallocChunk *) ptr;
 
+    /* copy all the possible bytes from the 'ptr' to the 'newptr'... */
+    newptr = ft_memcpy(newptr, chk->c_dat, chk->c_siz);
+    if (!newptr) {
+        return (0);
+    }
+
+    /* release old 'ptr'... */
+    free(chk->c_dat);
+
+    /* return 'newptr'... */
     return (newptr);
 }

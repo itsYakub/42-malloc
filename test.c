@@ -5,6 +5,8 @@
 # include "ft_malloc.h"
 #else
 # include <stdlib.h>
+#
+# include "./libft/libft.h"
 
 /* libc doesn't provide such function as 'show_alloc_mem' so we must provide something to make the compiler work */
 static void show_alloc_mem(void) { }
@@ -38,6 +40,22 @@ int main(void) {
     }
     
     show_alloc_mem();
+
+    char *ptr = malloc(8);
+    ft_strlcpy(ptr, "Hello", 8);
+    ft_putendl_fd(ptr, 1);
+
+    show_alloc_mem();
+
+    ptr = realloc(ptr, 16);
+    ft_strlcat(ptr, ", World!", 16);
+    ft_putendl_fd(ptr, 1);
+
+    show_alloc_mem();
+   
+    free(ptr);
     
+    show_alloc_mem();
+
     return (0);
 }
