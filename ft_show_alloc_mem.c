@@ -4,6 +4,8 @@
 #include "./ft_malloc_int.h"
 
 void show_alloc_mem(void) {
+    size_t total = 0;
+
     /* TINY blocks... */
     if (g_info.blk.b_tny) {
         ft_putendl_fd("TINY blocks:", 1);
@@ -17,6 +19,7 @@ void show_alloc_mem(void) {
             while (chk) {
                 if (chk->c_use) {
                     printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
+                    total += chk->c_siz;
                 }
 
                 chk = chk->c_nxt;
@@ -37,6 +40,7 @@ void show_alloc_mem(void) {
             while (chk) {
                 if (chk->c_use) {
                     printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
+                    total += chk->c_siz;
                 }
 
                 chk = chk->c_nxt;
@@ -52,9 +56,12 @@ void show_alloc_mem(void) {
         while (chk) {
             if (chk->c_use) {
                 printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_dat + chk->c_siz, chk->c_siz);
+                total += chk->c_siz;
             }
 
             chk = chk->c_nxt;
         }
     }
+
+    printf("Total: %zu bytes\n", total);
 }

@@ -12,18 +12,25 @@ static void show_alloc_mem(void) { }
 #endif
 
 int main(void) {
-    srand(time(0));
-    for (size_t i = 1; i <= 64; i++) {
-        int *ptr = malloc(sizeof(int) * i);
-        if (!ptr) {
-            return (1);
-        }
+    /* tiny allocs... */
+    void *a = malloc(4);
+    void *b = malloc(9);
+    
+    /* small allocs... */
+    void *c = malloc(42);
+    void *d = malloc(96);
+    
+    /* large allocs... */
+    void *e = malloc(80085);
+    
+    show_alloc_mem();
 
-        *ptr = i;
-        // printf("%p = %d\n", ptr, *ptr);
-
-        if (rand() % 2) { free(ptr); }
-    }
+    free(a);
+    free(b);
+    free(c);
+    free(d);
+    free(e);
+    
     show_alloc_mem();
     
     return (0);

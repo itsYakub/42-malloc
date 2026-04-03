@@ -141,7 +141,7 @@ static void *_chk_alloc(const size_t size) {
 
     struct s_mallocChunk *chk = addr;
     chk->c_blk = chk->c_nxt = 0;
-    chk->c_dat = chk + 1;
+    chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
     chk->c_siz = size;
     chk->c_use = 1;
     return (chk);
