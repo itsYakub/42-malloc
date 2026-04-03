@@ -21,10 +21,10 @@
  * */
 
 struct s_mallocChunk {
+    
+    void *c_nxt;    /* c_nxt - next available block */
 
     void *c_blk;    /* c_blk - parent block of the chunk */
-
-    void *c_nxt;    /* c_nxt - next available block */
 
     void *c_dat;    /* c_dat - chunk's memory */
 

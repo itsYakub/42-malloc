@@ -13,7 +13,7 @@ static void *_chk_reserve(struct s_mallocBlock *, const size_t, const size_t);
  *  The malloc() function allocates size bytes and returns a pointer to the allocated memory.  The memory is not initialized.
  *  If size is 0, then malloc() returns either NULL, or a unique pointer value that can later be successfully passed to free().
  * */
-void *ft_malloc(size_t size) {
+void *malloc(size_t size) {
     if (!size) { return (0); }
 
     void *ptr = 0;
@@ -45,24 +45,21 @@ void *ft_malloc(size_t size) {
     /* perform large allocation... */
     else if (size > FT_MALLOC_SMALL_SIZE) {
         struct s_mallocChunk *chk = 0;
-        /* check if any large block is allocated... */
         if (!g_info.blk.b_lrg) {
             chk = g_info.blk.b_lrg = _chk_alloc(size);
+            if (!chk) {
+                return (0);
+            }
         }
-        /* if there're existing blocks... */
         else {
             chk = g_info.blk.b_lrg;
             while (chk->c_nxt) {
-                if (!chk->c_use) {
-                    /* reuse existing, size - matching chunk... */
-                    if (chk->c_siz == size) {
-                        break;
-                    }
+                if (!chk->c_use && chk->c_siz == size) {
+                    break;
                 }
+
                 chk = chk->c_nxt;
             }
-
-            /* if we get to the end of the list... */
             if (!chk->c_nxt) {
                 chk->c_nxt = _chk_alloc(size);
                 chk = chk->c_nxt;
@@ -165,11 +162,11 @@ static void *_chk_reserve(struct s_mallocBlock *blk, const size_t cap, const siz
     }
 
     /* set the current chunk metadata... */
+    chk->c_use = 1;
+    chk->c_siz = size;
     chk->c_blk = blk;
     chk->c_dat = (char *) chk + sizeof(struct s_mallocChunk);
     chk->c_nxt = (char *) chk + sizeof(struct s_mallocChunk) + size;
-    chk->c_siz = size;
-    chk->c_use = 1;
 
     /* update block's metadata... */
     blk->b_siz += size;

@@ -5,15 +5,13 @@ static int _blk_dealloc(struct s_mallocBlock *);
 
 static void *_blk_getalloc(struct s_mallocBlock *);
 
-static int _chk_dealloc(struct s_mallocChunk *);
-
 /* free:
  *  The free() function frees the memory space pointed to by ptr,
  *  which must have been returned by a previous call to malloc(), calloc(), or realloc().
  *  Otherwise, or if free(ptr) has already been called before, undefined behavior occurs.
  *  If ptr is NULL, no operation is per‐formed.
  * */
-void ft_free(void *ptr) {
+void free(void *ptr) {
     if (!ptr) { return; }
 
     /* move the pointer to the metadata... */
@@ -28,7 +26,8 @@ void ft_free(void *ptr) {
     /* perform tiny deallocation... */
     if (size > 0 && size <= FT_MALLOC_TINY_SIZE) {
         /* clear the memory... */
-        _chk_dealloc(chk);
+        ft_memset(chk->c_dat, 0, chk->c_siz);
+        chk->c_use = 0;
 
         /* clear the memory block if no chunks is present... */
         if (!_blk_getalloc(blk)) {
@@ -42,7 +41,8 @@ void ft_free(void *ptr) {
     /* perform small deallocation... */
     else if (size > FT_MALLOC_TINY_SIZE && size <= FT_MALLOC_SMALL_SIZE) {
         /* clear the memory... */
-        _chk_dealloc(chk);
+        ft_memset(chk->c_dat, 0, chk->c_siz);
+        chk->c_use = 0;
 
         /* clear the memory block if no chunks is present... */
         if (!_blk_getalloc(blk)) {
@@ -55,31 +55,19 @@ void ft_free(void *ptr) {
 
     /* perform large deallocation... */
     else if (size > FT_MALLOC_SMALL_SIZE) {
-        /* dealloc for the head... */
         if (chk == g_info.blk.b_lrg) {
-            /* save the next element from head... */
-            chk = chk->c_nxt;
+            g_info.blk.b_lrg = g_info.blk.b_lrg->c_nxt;
 
-            /* unmap current head... */
-            munmap(g_info.blk.b_lrg, sizeof(struct s_mallocChunk) + chk->c_siz);
-
-            /* assign new head (if current 'chk' is null then we effectively clear-out the chunk list)... */
-            g_info.blk.b_lrg = chk;
+            munmap(chk, sizeof(struct s_mallocChunk) + chk->c_siz);
         }
 
-        /* dealloc non-head element... */
         else {
-            /* dealloc the tail... */
-            if (!chk->c_nxt) {
-                munmap(chk, sizeof(struct s_mallocChunk) + chk->c_siz);
-            }
+            struct s_mallocChunk *pchk = g_info.blk.b_lrg;
+            for ( ; pchk->c_nxt != chk; pchk = pchk->c_nxt) { }
 
-            /* dealloc inner element... */
-            else {
-                /* TODO:
-                 *  figure out how to dealloc inner element
-                 * */
-            }
+            pchk->c_nxt = (chk->c_nxt ? chk->c_nxt : 0);
+
+            munmap(chk, sizeof(struct s_mallocChunk) + chk->c_siz);
         }
     }
 }
@@ -117,14 +105,5 @@ static void *_blk_getalloc(struct s_mallocBlock *blk) {
     }
 
     /* no used chunks were found... */
-    return (0);
-}
-
-
-static int _chk_dealloc(struct s_mallocChunk *chk) {
-    if (!chk) { return (0); }
-
-    chk->c_dat = ft_memset(chk->c_dat, 0, chk->c_siz);
-    chk->c_use = 0;
     return (0);
 }

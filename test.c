@@ -12,24 +12,30 @@ static void show_alloc_mem(void) { }
 #endif
 
 int main(void) {
-    /* tiny allocs... */
-    void *a = malloc(4);
-    void *b = malloc(9);
+    void *ptrs[] = {
+        /* tiny allocs... */
+        malloc(1),
+        malloc(4),
+        malloc(16),
     
-    /* small allocs... */
-    void *c = malloc(42);
-    void *d = malloc(96);
-    
-    /* large allocs... */
-    void *e = malloc(80085);
-    
+        /* small allocs... */
+        malloc(42),
+        malloc(69),
+        malloc(96),
+
+        /* large allocs... */
+        malloc(129),
+        malloc(420),
+        malloc(1337),
+        malloc(2137),
+        malloc(80085)
+    };
+
     show_alloc_mem();
 
-    free(a);
-    free(b);
-    free(c);
-    free(d);
-    free(e);
+    for (int i = sizeof(ptrs) / sizeof(void *) - 1; i >= 0; i--) {
+        free(ptrs[i]);
+    }
     
     show_alloc_mem();
     

@@ -9,7 +9,7 @@
  *  Unless ptr is NULL, it must have been returned by an earlier call to malloc(), calloc(), or realloc().
  *  If the area pointed to was moved, a free(ptr) is done.
  * */
-void *ft_realloc(void *ptr, size_t size) {
+void *realloc(void *ptr, size_t size) {
     /* Allocate the new memory block...
      * */
     void *newptr = malloc(size);

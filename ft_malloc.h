@@ -19,15 +19,12 @@
 #
 # include "./libft/libft.h" /* libft...         */
 
-void ft_free(void *);
+void free(void *);
 
-void *ft_malloc(size_t);
+void *malloc(size_t);
 
-void *ft_realloc(void *, size_t);
+void *realloc(void *, size_t);
 
 void show_alloc_mem(void);
 
-# define free       ft_free
-# define malloc     ft_malloc
-# define realloc    ft_realloc
 #endif /* _malloc_h_ */

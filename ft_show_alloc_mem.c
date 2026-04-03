@@ -3,6 +3,9 @@
 #include "./ft_malloc.h"
 #include "./ft_malloc_int.h"
 
+/* TODO:
+ *  Custom numeric logger functions for printing pointers...
+ * */
 void show_alloc_mem(void) {
     size_t total = 0;
 
@@ -11,19 +14,17 @@ void show_alloc_mem(void) {
         ft_putendl_fd("TINY blocks:", 1);
         /* iterate over every block... */
         struct s_mallocBlock *blk = g_info.blk.b_tny;
-        for (size_t i = 1; blk; i++, blk = blk->b_nxt) {
-            printf("%zu : %p :\n", i, blk);
-
+        while (blk) {
             /* iterate over every chunk... */
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
                 if (chk->c_use) {
-                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
                     total += chk->c_siz;
                 }
 
                 chk = chk->c_nxt;
             }
+            blk = blk->b_nxt;
         }
     }
     
@@ -32,19 +33,17 @@ void show_alloc_mem(void) {
         ft_putendl_fd("SMALL blocks:", 1);
         /* iterate over every block... */
         struct s_mallocBlock *blk = g_info.blk.b_sml;
-        for (size_t i = 1; blk; i++, blk = blk->b_nxt) {
-            printf("%zu : %p :\n", i, blk);
-
+        while (blk) {
             /* iterate over every chunk... */
             struct s_mallocChunk *chk = blk->b_dat;
             while (chk) {
                 if (chk->c_use) {
-                    printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_nxt, chk->c_siz);
                     total += chk->c_siz;
                 }
 
                 chk = chk->c_nxt;
             }
+            blk = blk->b_nxt;
         }
     }
     
@@ -55,7 +54,6 @@ void show_alloc_mem(void) {
         struct s_mallocChunk *chk = g_info.blk.b_lrg;
         while (chk) {
             if (chk->c_use) {
-                printf("- %p - %p : %zu bytes\n", chk->c_dat, chk->c_dat + chk->c_siz, chk->c_siz);
                 total += chk->c_siz;
             }
 
@@ -63,5 +61,7 @@ void show_alloc_mem(void) {
         }
     }
 
-    printf("Total: %zu bytes\n", total);
+    ft_putstr_fd("Total: ", 1);
+    ft_putnbr_fd(total, 1);
+    ft_putchar_fd('\n', 1);
 }
