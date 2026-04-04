@@ -5,15 +5,12 @@
 
 static void _chk_printptr(struct s_mallocChunk *);
 
-/* TODO:
- *  Custom numeric logger functions for printing pointers...
- * */
 void show_alloc_mem(void) {
     size_t total = 0;
 
     /* TINY blocks... */
     if (g_info.blk.b_tny) {
-        ft_putendl_fd("TINY blocks:", 1);
+        ft_putendl_fd("TINY chunks:", 1);
         /* iterate over every block... */
         struct s_mallocBlock *blk = g_info.blk.b_tny;
         while (blk) {
@@ -31,7 +28,7 @@ void show_alloc_mem(void) {
     
     /* SMALL blocks... */
     if (g_info.blk.b_sml) {
-        ft_putendl_fd("SMALL blocks:", 1);
+        ft_putendl_fd("SMALL chunks:", 1);
         /* iterate over every block... */
         struct s_mallocBlock *blk = g_info.blk.b_sml;
         while (blk) {
@@ -49,7 +46,7 @@ void show_alloc_mem(void) {
     
     /* LARGE blocks... */
     if (g_info.blk.b_lrg) {
-        ft_putendl_fd("LARGE blocks:", 1);
+        ft_putendl_fd("LARGE chunks:", 1);
         /* iterate over every block... */
         struct s_mallocChunk *chk = g_info.blk.b_lrg;
         while (chk) {

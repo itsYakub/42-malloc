@@ -11,7 +11,7 @@ endif
 # ========
 
 CC		= cc
-CFLAGS	= -Wall -Wextra -Werror -ggdb3 -std=c99
+CFLAGS	= -Wall -Wextra -Werror -ggdb3 -std=c99 -D_GNU_SOURCE
 LFLAGS	= -lft
 LDFLAGS	= -L$(LIBFT)
 
